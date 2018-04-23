@@ -23,6 +23,7 @@ class SpbcScannerH
 	public $file_stamp     = '';
 	
 	public $includes       = array();
+	public $sql_requests   = array();
 	
 	public $error = array();
 	
@@ -218,6 +219,9 @@ class SpbcScannerH
 		// Getting all include constructions and detecting bad
 		// $this->includes_standartize();
 		$this->includes_getAll();
+		
+		// Getting all include constructions and detecting bad
+		$this->sql_requests_getAll();
 		
 		$this->make_verdict();
 		
@@ -490,6 +494,83 @@ class SpbcScannerH
 		);
 	}
 	
+	public function sql_requests_getAll(){
+		for(
+			$key = 0, $current = null, $arr_size = count($this->file_lexems);
+			$key < $arr_size;
+			$key++, $current = isset($this->file_lexems[$key]) ? $this->file_lexems[$key] : null, $sql_start = null, $sql_end = null
+		){
+			if($current[0] == 'T_STRING'
+					&& (   $current[1] == 'mysql_query'
+						|| $current[1] == 'mysqli_query'
+						|| $current[1] == 'mysqli_send_query'
+						|| $current[1] == 'mysqli_multi_query'
+					)
+				){
+					$sql_start = $key + 2;
+					$sql_start = $key;
+					$sql_end = $this->lexem_getNext($key, ';')-1;
+				}
+			if($current[0] == 'T_STRING' && ($current[1] == 'mysqli' || $current[1] == 'MYSQLI') && $this->file_lexems[$key+2][0] == 'T_STRING'
+					&& (   
+						   $this->file_lexems[$key+2][1] == 'query'
+						|| $this->file_lexems[$key+2][1] == 'send_query'
+						|| $this->file_lexems[$key+2][1] == 'multi_query'
+					)
+				){
+					$sql_start = $key + 4;
+					$sql_start = $key;
+					$sql_end = $this->lexem_getNext($key, ';')-1;
+				}
+			if($current[0] == 'T_STRING' && ($current[1] == 'pdo' || $current[1] == 'PDO') && $this->file_lexems[$key+2][0] == 'T_STRING'
+				&& (   
+					   $this->file_lexems[$key+2][1] == 'query'
+					|| $this->file_lexems[$key+2][1] == 'exec'
+				)
+			){
+				$sql_start = $key + 4;
+				$sql_start = $key;
+				$sql_end = $this->lexem_getNext($key, ';')-1;
+			}
+			if($current[0] == 'T_VARIABLE' && $this->file_lexems[$key+1][0] == 'T_OBJECT_OPERATOR' && $this->file_lexems[$key+2][0] == 'T_STRING'
+				&& (   
+					   $this->file_lexems[$key+2][1] == 'query'
+					|| $this->file_lexems[$key+2][1] == 'get_results'
+				)
+			){
+				$sql_start = $key + 4;
+				$sql_start = $key;
+				$sql_end = $this->lexem_getNext($key, ';')-1;
+			}
+			
+			if($sql_start && $sql_end){
+				$sql = $this->lexem_getRange($sql_start, $sql_end);
+				$this->sql_requests_processsAndSave($sql, $key);
+			}
+		}
+	}
+	
+	public function sql_requests_processsAndSave($sql, $key, $status = true, $good = true){
+		
+		// Checking for bad variables in sql
+		foreach($sql as $value){
+			if($value[0] === 'T_VARIABLE' && (in_array($value[1], $this->variables_bad_default) || isset($this->variables_bad[$value[1]]))){
+				$good = false;
+				break;
+			}
+		} unset($value);
+		
+		$status = $good ? true : false;
+		
+		$this->sql_requests[] = array(
+			'sql'    => $sql,
+			'status' => $status,
+			'good'   => $good,
+			'string' => $this->file_lexems[$key][2],
+		);
+		
+	}
+	
 	public function make_verdict()
 	{
 		// Detecting bad functions
@@ -511,6 +592,12 @@ class SpbcScannerH
 					$this->verdict['CRITICAL'][$include['string']] = substr($this->gather_lexems($include['include']), 0, 255);
 				elseif($include['good'] === false)
 					$this->verdict['SUSPICIOUS'][$include['string']] = substr($this->gather_lexems($include['include']), 0, 255);
+			}
+		}
+		// Adding bad sql to $verdict['SEVERITY']['string_num'] = 'whole string with sql'
+		foreach($this->sql_requests as $sql){
+			if($sql['status'] === false){
+				$this->verdict['SUSPICIOUS'][$sql['string']] = substr($this->gather_lexems($sql['sql']), 0, 255);
 			}
 		}
 	}
