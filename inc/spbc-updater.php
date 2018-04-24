@@ -259,6 +259,7 @@ function spbc_update_to_2_8_0(){
 }
 
 function spbc_update_to_2_9_0(){
+	global $wpdb;
 	$wpdb->query("ALTER TABLE `" . SPBC_DB_PREFIX . SPBC_LOG_TABLE . "` 
 		CHANGE `user_login` `user_login` VARCHAR(100) NOT NULL;");
 }

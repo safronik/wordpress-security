@@ -262,6 +262,12 @@ Brute force attack is one of the most security issues as an intruder gets full a
 6. **Malware scanner tab**. Here  you can scan all Wordpress files for malicious and suspicious code.
 
 == Changelog ==
+= 2.9 April 24 2018 =
+ * Mod: SQL-injection search.
+ * Fix: IP detection. PHP Warning.
+ * Fix: Empty username in security log.
+ * Fix: Possible SSL error.
+
 = 2.8.3 April 6 2018 =
  * Fix: IP detection and PHP Warnings.
 
@@ -573,6 +579,12 @@ Brute force attack is one of the most security issues as an intruder gets full a
  * First release with anti brute force hacks protection.
 
 == Upgrade Notice ==
+= 2.9 April 24 2018 =
+ * Mod: SQL-injection search.
+ * Fix: IP detection. PHP Warning.
+ * Fix: Empty username in security log.
+ * Fix: Possible SSL error.
+
 = 2.8.3 April 6 2018 =
  * Fix: IP detection and PHP Warnings.
 
