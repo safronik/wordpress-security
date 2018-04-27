@@ -83,6 +83,17 @@ Every file in /wp-content/* will be checked with a heuristic. And the check can 
 
 Malware Heuristic analyses the code by simplifying it and looks for suspicious functions and constructs which are usually used by hackers. For example eval construct http://php.net/manual/en/function.eval.php and much other suspicious stuff.
 
+= Malware scanner to find SQL Injections =
+
+What is SQL injection?
+
+This is an attack on the database, which will allow performing some action that was not planned by the script creator.
+
+SQL injection is one of the most accessible ways to hack a site. With using it, hackers "read" the contents of any tables, delete, modify or add information to the database, overwrite the contents of local files and give commands to execute arbitrary commands. In other words, they completely intercept the management of the attacked site.
+The essence of such injections is the introduction of arbitrary SQL code into data (transmitted via GET, POST requests or Cookie values). If the site is vulnerable and performs such injections, then in fact there is an opportunity to create from the database (most often it's MySQL) anything.
+
+The CleanTalk Malware Scanner allows you to find code that allows performing SQL injection. It is this problem that the scanner solves.
+
 == Frequently Asked Questions ==
 
 = Why are they attacking me? =
