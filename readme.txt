@@ -1,5 +1,5 @@
 === Security & Malware scan by CleanTalk ===
-Contributors: shagimuratov, Aleksandrrazor, sartemd174
+Contributors: shagimuratov, Aleksandrrazor, sartemd174, security24
 Requires at least: 3.0
 Stable tag: 2.9
 Tested up to: 4.9.5
