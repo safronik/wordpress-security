@@ -427,21 +427,21 @@ class SpbcHelper
 	static public function api_method__backlinks_check_cms($api_key, $data, $date = null, $do_check = true)
 	{
 		$request = array(
-			'agent' => APBCT_AGENT,
+			'agent'       => APBCT_AGENT,
 			'method_name' => 'backlinks_check_cms',
-			'auth_key' => $api_key,
-			'data' => is_array($data) ? implode(',',$date) : $date,
+			'auth_key'    => $api_key,
+			'data'        => is_array($data) ? implode(',',$data) : $data,
 		);
 		
 		if($date) $request['date'] = $date;
 		
-		$result = self::api_send_request($request);
-		$result = $do_check ? self::api_check_response($result, 'backlinks_check_cms') : $result;
+		$result = self::api__send_request($request);
+		$result = $do_check ? self::api__check_response($result, 'backlinks_check_cms') : $result;
 		
 		return $result;
 	}
 	
-	static public function api__send_request($data, $url = self::URL, $isJSON = false, $timeout=3, $ssl = false)
+	static public function api__send_request($data, $url = self::URL, $isJSON = false, $timeout = 6, $ssl = false)
 	{	
 		$original_data = $data;
 		$result = null;
@@ -491,7 +491,7 @@ class SpbcHelper
 		if($curl_error){
 			
 			$opts = array(
-				'http'=>array(
+				'http' => array(
 					'method'  => "POST",
 					'timeout' => $timeout,
 					'content' => $data,

@@ -3,7 +3,7 @@
 class SpbcScannerH
 {
 	// Constants
-	const FILE_MAX_SIZE = 1048576; // 1 MB
+	const FILE_MAX_SIZE = 1048576/2; // 1 MB
 	
 	// Current file atributes
 	public $is_text        = false;
@@ -193,9 +193,11 @@ class SpbcScannerH
 	{
 		
 		$this->file_lexems = token_get_all($this->file_work);
-		
+		error_log(__FILE__ .':'.__LINE__ .': '.__FUNCTION__ ." \n".var_export($this->file_lexems, true));
 		// Preparing file
 		$this->lexems_getAll();
+		
+		error_log(__FILE__ .':'.__LINE__ .': '.__FUNCTION__ ." \n".var_export($this->file_lexems, true));
 		$this->lexems_stripUseless();
 		
 		// Simplifying
@@ -232,8 +234,8 @@ class SpbcScannerH
 	// Strips Usless lexems. T_INLINE_HTML, T_COMMENT, T_DOC_COMMENT
 	public function lexems_getAll()
 	{
-		foreach($this->file_lexems as $key => $lexem){
-			$this->file_lexems[$key][0] = is_array($lexem) ? token_name($lexem[0]) : $lexem;
+		foreach($this->file_lexems as $key => &$lexem){
+			if(isset($lexem[1])) $lexem[0] = token_name($lexem[0]);
 		}
 	}
 	
@@ -452,7 +454,10 @@ class SpbcScannerH
 		$error_free = $this->file_lexems[$key-1] === '@' ? false : true;
 		
 		// Include is a single string
-		if((count($include) == 1 && $include[0][0] === 'T_CONSTANT_ENCAPSED_STRING') or ($include[0] == '(' && count($include) == 3 && $include[1][0] === 'T_CONSTANT_ENCAPSED_STRING')){
+		if(
+			(count($include) == 1 && $include[0][0] === 'T_CONSTANT_ENCAPSED_STRING') or 
+			(count($include) == 3 && $include[0] == '(' && $include[1][0] === 'T_CONSTANT_ENCAPSED_STRING')
+		){
 			
 			$path = count($include) == 3 ? substr($include[1][1], 1, -1) : substr($include[0][1], 1, -1); // Cutting quotes
 			$not_url  = !filter_var($path, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED) ? true : false; // Checks if it is URL
@@ -498,8 +503,11 @@ class SpbcScannerH
 		for(
 			$key = 0, $current = null, $arr_size = count($this->file_lexems);
 			$key < $arr_size;
-			$key++, $current = isset($this->file_lexems[$key]) ? $this->file_lexems[$key] : null, $sql_start = null, $sql_end = null
+			$key++
 		){
+			$current = isset($this->file_lexems[$key]) ? $this->file_lexems[$key] : null;
+			$sql_start = null;
+			$sql_end = null;
 			if($current[0] == 'T_STRING'
 					&& (   $current[1] == 'mysql_query'
 						|| $current[1] == 'mysqli_query'

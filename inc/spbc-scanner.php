@@ -482,6 +482,9 @@ function spbc_scanner_scan_modified($direct_call = false, $status = 'COMPROMISED
 			if($file['status'] === 'UNKNOWN' && $source == 'CORE'){
 				$result['status'] = 'UNKNOWN';
 			}
+			if($file['status'] === 'COMPROMISED' && $source == 'CORE'){
+				$result['status'] = 'COMPROMISED';
+			}
 			
 			$wpdb->update(
 				SPBC_DB_PREFIX . SPBC_SCAN_RESULTS,
@@ -546,6 +549,14 @@ function spbc_scanner_links_scan($direct_call = false, $amount = 10){
 		
 		if (count($new_links)>0){
 			
+			// Checking links against blacklists
+			$result = SpbcHelper::api_method__backlinks_check_cms($spbc->settings['spbc_key'], array_keys($new_links));
+			if(empty($result['error'])){
+				foreach($new_links as $link => &$link_stat){
+					$link_stat['in_blacklists'] = $result[$link]['appears'];
+				} unset($link, $link_stat);
+			}
+			
 			$success = $wpdb->insert(
 				SPBC_DB_PREFIX . SPBC_SCAN_LINKS_LOG,
 				array(
@@ -575,7 +586,7 @@ function spbc_scanner_links_get_scanned($offset = null, $amount = null, $scanned
 	$sql = 'SELECT links_list 
 		FROM ' . SPBC_DB_PREFIX . SPBC_SCAN_LINKS_LOG;
 	$sql_result = $wpdb->get_results($sql, ARRAY_A);	
-	
+		
 	foreach ($sql_result as $value){
 		$links_array = json_decode($value['links_list'],true);
 		foreach ($links_array as $url => $url_details){
@@ -601,6 +612,7 @@ function spbc_scanner_links_count_found($total = true)
 	$sql_result = $wpdb->get_results($sql,ARRAY_A);
 	if ($sql_result)
 		$count = $sql_result[0]['cnt'] == null ? 0 : $sql_result[0]['cnt'];
+	
 	return $count;
 }
 
@@ -670,8 +682,8 @@ function spbc_scanner_file_send($direct_call = false, $file_id = null){
 	
 	$root_path = spbc_get_root_path();
 	$file_id = $direct_call
-		? $file_id ? $file_id : false
-		: !empty($_POST['file_id']) ? $_POST['file_id'] : false;
+		? ($file_id ? $file_id : false)
+		: (!empty($_POST['file_id']) ? $_POST['file_id'] : false);
 	
 	if($file_id){
 		
@@ -740,8 +752,8 @@ function spbc_scanner_file_delete($direct_call = false, $file_id = null){
 	
 	$root_path = spbc_get_root_path();
 	$file_id = $direct_call
-		? $file_id ? $file_id : false
-		: !empty($_POST['file_id']) ? $_POST['file_id'] : false;
+		? ($file_id ? $file_id : false)
+		: (!empty($_POST['file_id']) ? $_POST['file_id'] : false);
 	
 	if($file_id){
 		
@@ -800,8 +812,8 @@ function spbc_scanner_file_approve($direct_call = false, $file_id = null){
 	
 	$root_path = spbc_get_root_path();
 	$file_id = $direct_call
-		? $file_id ? $file_id : false
-		: !empty($_POST['file_id']) ? $_POST['file_id'] : false;
+		? ($file_id ? $file_id : false)
+		: (!empty($_POST['file_id']) ? $_POST['file_id'] : false);
 	
 	if($file_id){
 		
@@ -823,7 +835,7 @@ function spbc_scanner_file_approve($direct_call = false, $file_id = null){
 					if($md5){
 						
 						$sql = 'UPDATE '.SPBC_DB_PREFIX . SPBC_SCAN_RESULTS.'
-							SET status = "OK", severity = NULL, real_full_hash = "'.$md5.'"
+							SET status = "APROVED", severity = NULL, real_full_hash = "'.$md5.'"
 							WHERE fast_hash = "'.$file_id.'"';
 						$sql_result = $wpdb->get_results($sql, ARRAY_A);
 							
@@ -1006,8 +1018,8 @@ function spbc_scanner_file_replace($direct_call = false, $file_id = null, $platf
 	$root_path = spbc_get_root_path();
 	
 	$file_id = $direct_call
-		? $file_id ? $file_id : false
-		: !empty($_POST['file_id']) ? $_POST['file_id'] : false;
+		? ($file_id ? $file_id : false)
+		: (!empty($_POST['file_id']) ? $_POST['file_id'] : false);
 	
 	if($file_id){
 		
@@ -1132,12 +1144,12 @@ function spbc_scanner_list_results($direct_call = false, $offset = 0, $amount = 
 		);
 	}
 	if((!$type || $type == 'outbound links') && $spbc->settings['scan_outbound_links']){
-			$links = spbc_scanner_links_get_scanned($offset,$amount);
-			$links_amount = spbc_scanner_links_count_found(true);
-			$output['data']['outbound links'] = array (
-				'list'  => $links,
-				'amount'=> $links_amount,
-			);
+		$links = spbc_scanner_links_get_scanned($offset,$amount);
+		$links_amount = spbc_scanner_links_count_found(true);
+		$output['data']['outbound links'] = array (
+			'list'  => $links,
+			'amount'=> $links_amount,
+		);
 	}	
 	if(!$type){
 		$total_amount = $wpdb->get_results('SELECT COUNT(fast_hash) as cnt FROM '.SPBC_DB_PREFIX . SPBC_SCAN_RESULTS, ARRAY_A.' WHERE status IN (\'UNKNOWN\', \'COMPROMISED\') AND severity IS NOT NULL');
@@ -1159,6 +1171,9 @@ function spbc_scanner_list_results($direct_call = false, $offset = 0, $amount = 
 			} unset($key2, $value2);
 		}
 		if ($key == 'outbound links'){
+			
+			// error_log(__FILE__ .':'.__LINE__ .': '.__FUNCTION__ ." \n".var_export($output['data'][$key], true));
+			
 			foreach($value['list'] as $key2 => $value2){
 				$output['data'][$key]['list'][$key2]['url'] = $key2;
 				$output['data'][$key]['list'][$key2]['url_text'] = (strlen($key2) >= 40)

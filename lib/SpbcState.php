@@ -44,6 +44,7 @@ class SpbcState
 		'notice_trial'             => false,
 		'notice_were_updated'      => false,
 		'service_id'               => '',
+		'license_trial'            => 0,
 		'scanner'                  => array(
 			'last_wp_version'      => null,
 			'cron' => array(
@@ -135,9 +136,10 @@ class SpbcState
 	
 	public function deleteOption($option_name, $use_prefix = false)
 	{
-		$this->__isset($option_name);
-		$this->__unset($option_name);
-		delete_option( ($use_prefix ? $this->option_prefix.'_' : '') . $option_name);
+		if($this->__isset($option_name)){
+			$this->__unset($option_name);
+			delete_option( ($use_prefix ? $this->option_prefix.'_' : '') . $option_name);
+		}		
 	}
 	
 	/**
