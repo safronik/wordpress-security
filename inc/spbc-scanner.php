@@ -4,6 +4,7 @@ function spbc_perform_scan_wrapper($state = null){
 	
 	global $spbc;
 	
+	
 	if($spbc->scaner_status === false)
 		return;
 	
@@ -546,15 +547,31 @@ function spbc_scanner_links_scan($direct_call = false, $amount = 10){
 		
 		$prev_scanned_links = spbc_scanner_links_get_scanned();	
 		$new_links = array_diff_key($scanner->links, $prev_scanned_links);
-		
+				
 		if (count($new_links)>0){
 			
+			foreach(array_keys($new_links) as $key => $link){
+				preg_match('/(\S*):\/\/(.*?)[\/]?$/',$link, $matches);
+				if($matches[1] === '' || $matches[1] === 'http' || $matches[1] === 'https'){
+					$links_to_check[] = $matches[2];
+					$links[] = $matches[0];
+				}
+			} unset($link);
+			
 			// Checking links against blacklists
-			$result = SpbcHelper::api_method__backlinks_check_cms($spbc->settings['spbc_key'], array_keys($new_links));
+			$result = SpbcHelper::api_method__backlinks_check_cms($spbc->settings['spbc_key'], $links_to_check);
+			
 			if(empty($result['error'])){
-				foreach($new_links as $link => &$link_stat){
-					$link_stat['in_blacklists'] = $result[$link]['appears'];
-				} unset($link, $link_stat);
+				foreach($links_to_check as $key => $link){
+					if(isset($result[$link])){
+						$links_checked[$links[$key]] = array(
+							'spam_active' => $result[$link]['appears'],
+							'page_url'    => $new_links[$links[$key]]['page_url'],
+							'link_text'   => $new_links[$links[$key]]['link_text'],
+						);
+					}
+				}
+				$new_links = array_merge($new_links, $links_checked);
 			}
 			
 			$success = $wpdb->insert(

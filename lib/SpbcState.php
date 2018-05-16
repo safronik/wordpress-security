@@ -90,8 +90,9 @@ class SpbcState
 				$option = is_array($option) ? array_merge($this->def_settings, $option) : $this->def_settings;
 			}
 			
-			if($this->option_prefix.'_'.$option_name === 'spbc_data')
+			if($this->option_prefix.'_'.$option_name === 'spbc_data'){
 				$option = is_array($option) ? array_merge($this->def_data,     $option) : $this->def_data;
+			}
 			
 			$this->$option_name = is_array($option) ? new ArrayObject($option) : $option;
 		}

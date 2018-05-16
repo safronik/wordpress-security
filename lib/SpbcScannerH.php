@@ -193,11 +193,10 @@ class SpbcScannerH
 	{
 		
 		$this->file_lexems = token_get_all($this->file_work);
-		error_log(__FILE__ .':'.__LINE__ .': '.__FUNCTION__ ." \n".var_export($this->file_lexems, true));
+		
 		// Preparing file
 		$this->lexems_getAll();
 		
-		error_log(__FILE__ .':'.__LINE__ .': '.__FUNCTION__ ." \n".var_export($this->file_lexems, true));
 		$this->lexems_stripUseless();
 		
 		// Simplifying

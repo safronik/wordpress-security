@@ -248,6 +248,14 @@ function spbc_settings_page() {
 				echo '<br>';
 				echo __('CleanTalk is registered Trademark. All rights reserved.', 'security-malware-firewall');
 				echo '<br>';
+				echo '<b style="display: inline-block; margin-top: 10px;">'
+					.sprintf(
+						__('Do you like CleanTalk? %sPost your feedback here%s.', 'cleantalk'),
+						'<a href="https://wordpress.org/support/plugin/security-malware-firewall/reviews/#new-post" target="_blank">',
+						'</a>'
+					)
+				.'</b>';
+				echo '<br />';
 				spbc_badge__get_premium();
 			?>
 		</div>
@@ -369,8 +377,8 @@ function spbc_field_security_status(){
 	$scanner_status = ($spbc->key_is_ok && $spbc->scaner_status && !empty($spbc->data['scanner']['last_scan']) && $spbc->data['scanner']['last_scan'] + (86400*7) > current_time('timestamp')) || $spbc->scaner_warning ? true : false;
 	$ssl_status = is_ssl();
 	$ssl_text   = sprintf('%s' . __('SSL Installed', 'security-malware-firewall') . '%s', 
-		$ssl_status ? '' : '<a href="https://cleantalk.org/my/?cp_mode=ssl'.($spbc->user_token ? '&user_token='.$spbc->user_token : '').'" target="_blank">',
-		$ssl_status ? '' : '</a>'
+		$ssl_status || !$spbc->key_is_ok ? '' : '<a href="https://cleantalk.org/my/?cp_mode=ssl'.($spbc->user_token ? '&user_token='.$spbc->user_token : '').'" target="_blank">',
+		$ssl_status || !$spbc->key_is_ok ? '' : '</a>'
 	);
 	
 	// Output statuses
@@ -460,7 +468,7 @@ function spbc_field_statistics(){
 			echo '<br />';
 			echo (isset($spbc->data['scanner']['last_scan'])
 				? sprintf(__('Website last scan was performed on %s', 'security-malware-firewall'), date('M d Y H:i:s', $spbc->data['scanner']['last_scan']))
-				: __('Website haven\'t been scanned yet.', 'security-malware-firewall'));
+				: __('Website hasn\'t been scanned yet.', 'security-malware-firewall'));
 		
 			if(isset($spbc->data['scanner']['last_sent'])){
 				echo '<br />';
@@ -474,9 +482,9 @@ function spbc_field_statistics(){
 function spbc_field_banners(){
 	global $spbc_tpl;
 	// Rate banner
-	echo sprintf($spbc_tpl['spbc_rate_plugin_tpl'],
-		SPBC_NAME  
-	);
+	// echo sprintf($spbc_tpl['spbc_rate_plugin_tpl'],
+		// SPBC_NAME  
+	// );
 	// Translate banner
 	if(substr(get_locale(), 0, 2) != 'en'){
 		echo sprintf($spbc_tpl['spbc_translate_banner_tpl'],
@@ -772,6 +780,13 @@ function spbc_field_security_logs($value = array('id' => 'spbc_option_security_l
 	
 	global $spbc, $wpdb;
 	
+	if(!$spbc->key_is_ok){
+		$button = '<input type="button" class="button button-primary" value="'.__('To setting', 'security-malware-firewall').'"  />';
+		$link = sprintf('<a href="#" onclick="spbc_switchTab(document.getElementsByClassName(\'spbc_tab_nav-settings_general\')[0], \'spbc_key\', 3);">%s</a>', $button);
+		echo '<div style="margin: 10px auto; text-align: center;"><h3 style="margin: 5px; display: inline-block;">'.__('Please, enter API key.', 'security-malware-firewall').'</h3>'.$link.'</div>';
+		return;
+	}
+	
 	// HEADER
 	$message_about_log = sprintf(__('This list contains details of actions for the past 24 hours and shows only last %d records. To see the full report please use <a target="_blank" href="https://cleantalk.org/my/logs?user_token=%s">Security control panel</a>.', 'security-malware-firewall'),
 		SPBC_LAST_ACTIONS_TO_VIEW,
@@ -924,7 +939,7 @@ function spbc_field_traffic_control_log( $value = array() ){
 	if(!$spbc->key_is_ok){
 		$button = '<input type="button" class="button button-primary" value="'.__('To setting', 'security-malware-firewall').'"  />';
 		$link = sprintf('<a href="#" onclick="spbc_switchTab(document.getElementsByClassName(\'spbc_tab_nav-settings_general\')[0], \'spbc_key\', 3);">%s</a>', $button);
-		echo '<div style="margin-top: 10px;"><h3 style="margin: 5px; display: inline-block;">'.__('Please, enter API key.', 'security-malware-firewall').'</h3>'.$link.'</div>';
+		echo '<div style="margin: 10px auto; text-align: center;"><h3 style="margin: 5px; display: inline-block;">'.__('Please, enter API key.', 'security-malware-firewall').'</h3>'.$link.'</div>';
 	}elseif(!$spbc->tc_status){
 		$button = '<input type="button" class="button button-primary" value="'.__('RENEW', 'security-malware-firewall').'"  />';
 		$link = sprintf('<a target="_blank" href="https://cleantalk.org/my/bill/security?cp_mode=security&utm_source=wp-backend&utm_medium=cpc&utm_campaign=WP%%20backend%%20trial_security&user_token=%s">%s</a>', $spbc->user_token, $button);
@@ -978,7 +993,7 @@ function spbc_field_traffic_control_log( $value = array() ){
 			
 		}
 		
-		echo '<p class="spbc_hint spbc_hint--left -display--inline-block">'
+		echo '<p class="spbc_hint spbc_hint--left -display--inline-block">&nbsp;'
 			.sprintf(
 				__('Traffic Control will block visitors if they send more than %s requests per hour.', 'security-malware-firewall'),
 				'<b>'.(isset($spbc->settings['traffic_control_autoblock_amount']) ? $spbc->settings['traffic_control_autoblock_amount'] : 1000).'</b>'
@@ -1019,13 +1034,13 @@ function spbc_field_traffic_control_log( $value = array() ){
 
 function spbc_tab__scanner(){
 	?>
-		<script src="<?php echo SPBC_PATH; ?>/js/spbc-scanner-plugin.js?ver=<?php echo   SPBC_VERSION.time(); ?>"></script>
+		<script src="<?php echo SPBC_PATH; ?>/js/spbc-scanner-plugin.js?ver=<?php echo   SPBC_VERSION; ?>"></script>
 		<div class='spbc_tab_fields_group'>
 			<div class='spbc_wrapper_field'>
 				<?php spbc_field_scaner(); ?>
 			</div>
 		</div>
-		<script src="<?php echo SPBC_PATH; ?>/js/spbc-settings_tab--scaner.js?ver=<?php echo SPBC_VERSION.time(); ?>"></script>
+		<script src="<?php echo SPBC_PATH; ?>/js/spbc-settings_tab--scaner.js?ver=<?php echo SPBC_VERSION; ?>"></script>
 	<?php
 	die();
 }
@@ -1061,11 +1076,11 @@ function spbc_field_scanner__prepare_data__links(&$table){
 		$num = $table->sql['offset']+1;
 		foreach($table->rows as $key => $row){
 			$table->items[] = array(
-				'num'           => $num++,
-				'link'          => "<a href='{$key}' target='_blank'>{$key}</a>",
-				'page'          => "<a href='{$row['page_url']}' target='_blank'>{$row['page_url']}</a>",
-				'link_text'     => htmlspecialchars($row['link_text']),
-				'in_blacklists' => isset($row['spam_active']) ? $row['spam_active'] : 'Unknown',
+				'num'         => $num++,
+				'link'        => "<a href='{$key}' target='_blank'>{$key}</a>",
+				'page'        => "<a href='{$row['page_url']}' target='_blank'>{$row['page_url']}</a>",
+				'link_text'   => htmlspecialchars($row['link_text']),
+				'spam_active' => isset($row['spam_active']) ? ($row['spam_active'] ? 'Yes' : 'No') : 'Unknown',
 			);
 		}
 	}	
@@ -1079,7 +1094,7 @@ function spbc_field_scaner($params = array()){
 		
 		$button = '<input type="button" class="button button-primary" value="'.__('To setting', 'security-malware-firewall').'"  />';
 		$link = sprintf('<a href="#" onclick="spbc_switchTab(document.getElementsByClassName(\'spbc_tab_nav-settings_general\')[0], \'spbc_key\', 3);">%s</a>', $button);
-		echo '<div style="margin-top: 10px;"><h3 style="margin: 5px; display: inline-block;">'.__('Please, enter API key.', 'security-malware-firewall').'</h3>'.$link.'</div>';
+		echo '<div style="margin: 10px auto; text-align: center;"><h3 style="margin: 5px; display: inline-block;">'.__('Please, enter API key.', 'security-malware-firewall').'</h3>'.$link.'</div>';
 		
 	}elseif(!$spbc->scaner_status){
 		
@@ -1215,8 +1230,10 @@ function spbc_field_scaner($params = array()){
 			);
 			
 			if($spbc->settings['scan_outbound_links'])
-				$description['outbound_links'] = __('Shows you the list of outgoing links from your website and websites on which they linking to.', 'security-malware-firewall');
-						
+				$tables_files['outbound_links'] = __('Shows you the list of outgoing links from your website and websites on which they linking to.', 'security-malware-firewall');
+			
+			
+			
 			foreach($tables_files as $type_name => $description){
 				
 				if($type_name == 'unknown'){
@@ -1252,11 +1269,11 @@ function spbc_field_scaner($params = array()){
 						'func_data_prepare' => 'spbc_field_scanner__prepare_data__links',
 						'if_empty_items' => '<p class="spbc_hint">'.__('No links are found', 'security-malware-firewall').'</p>',
 						'columns' => array(
-							'num'           => array('heading' => 'Number', 'class' => ' tbl-width--50px'),
-							'link'          => array('heading' => 'Link','primary' => true,),
-							'page'          => array('heading' => 'Page',),
-							'link_text'     => array('heading' => 'Link Text',),
-							'in_blacklists' => array('heading' => 'Spam-active',),
+							'num'         => array('heading' => 'Number', 'class' => ' tbl-width--50px'),
+							'link'        => array('heading' => 'Link','primary' => true,),
+							'page'        => array('heading' => 'Page',),
+							'link_text'   => array('heading' => 'Link Text',),
+							'spam_active' => array('heading' => 'Spam-active',),
 						),
 						'pagination' => array(
 							'page'     => 1,

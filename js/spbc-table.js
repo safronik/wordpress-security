@@ -7,11 +7,13 @@ function spbc_tbl__bulk_actions__listen(){
 		spbc_bulk_action = self;
 		var action = self.siblings('select').children()[self.siblings('select').first()[0].selectedIndex].value;
 		if(self.parents('.tbl-root').find('.cb-select').is(':checked')){
-			self.parents('.tbl-root').find('.cb-select:checked').first().prop('checked', false);
-			if(self.parents('.tbl-root').find('.cb-select:checked').first().parents('tr').find('.tbl-row_action--'+action)[0])
+			if(self.parents('.tbl-root').find('.cb-select:checked').first().parents('tr').find('.tbl-row_action--'+action)[0]){
 				self.parents('.tbl-root').find('.cb-select:checked').first().parents('tr').find('.tbl-row_action--'+action).click();
-			else
+				self.parents('.tbl-root').find('.cb-select:checked').first().prop('checked', false);
+			}else{
+				self.parents('.tbl-root').find('.cb-select:checked').first().prop('checked', false);
 				self.click();
+			}
 		}else{
 			spbc_bulk_action = null;
 		}
