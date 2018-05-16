@@ -551,12 +551,12 @@ function spbc_scanner_links_scan($direct_call = false, $amount = 10){
 		if (count($new_links)>0){
 			
 			foreach(array_keys($new_links) as $key => $link){
-				preg_match('/(\S*):\/\/(.*?)[\/]?$/',$link, $matches);
-				if($matches[1] === '' || $matches[1] === 'http' || $matches[1] === 'https'){
-					$links_to_check[] = $matches[2];
-					$links[] = $matches[0];
+				$parsed = parse_url($link);
+				if($parsed && (!isset($parsed['sheme']) || (isset($parsed['sheme']) || $matches[1] === 'http' || $matches[1] === 'https'))){
+					$links_to_check[] = $parsed['host'];
+					$links[] = $link;
 				}
-			} unset($link);
+			} unset($key, $link);
 			
 			// Checking links against blacklists
 			$result = SpbcHelper::api_method__backlinks_check_cms($spbc->settings['spbc_key'], $links_to_check);
