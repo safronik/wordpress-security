@@ -3,7 +3,7 @@
 class SpbcScannerH
 {
 	// Constants
-	const FILE_MAX_SIZE = 1048576/2; // 1 MB
+	const FILE_MAX_SIZE = 1048576; // 1 MB
 	
 	// Current file atributes
 	public $is_text        = false;

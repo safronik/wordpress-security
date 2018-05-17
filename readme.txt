@@ -273,6 +273,9 @@ Brute force attack is one of the most security issues as an intruder gets full a
 6. **Malware scanner tab**. Here  you can scan all Wordpress files for malicious and suspicious code.
 
 == Changelog ==
+= 2.10.1 May 17 2018 =
+ * Fix: Error for old PHP versions.
+
 = 2.10 May 16 2018 =
  * New: Links scanner checks links for spam activity.
  * New: Resigned settings tabs.
@@ -597,6 +600,9 @@ Brute force attack is one of the most security issues as an intruder gets full a
  * First release with anti brute force hacks protection.
 
 == Upgrade Notice ==
+= 2.10.1 May 17 2018 =
+ * Fix: Error for old PHP versions.
+
 = 2.10 May 16 2018 =
  * New: Links scanner checks links for spam activity.
  * New: Resigned settings tabs.
