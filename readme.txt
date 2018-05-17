@@ -11,7 +11,7 @@ Security, FireWall, Malware scan by CleanTalk, protects from Brute force hacks, 
 == Description ==
 
 = Security features =
-* **Stops brute-force attacks to hack passwords**
+* **Stops brute force attacks to hack passwords**
 * **Stops brute force attacks to find WordPress accounts**
 * **Limit Login Attempts**
 * **Security Protection for WordPress login form**
